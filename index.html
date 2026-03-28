@@ -92,23 +92,28 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle; margin-right: 5px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 audio { display: none; }
-.settings-toggle { position:fixed; top:1rem; right:1rem; background:rgba(232,201,122,0.15); border:1px solid var(--border); color:var(--gold); border-radius:8px; padding:0.4rem 0.8rem; cursor:pointer; font-family:inherit; font-size:0.82rem; z-index:100; }
-.key-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:0.6rem 0.9rem; color:var(--text); font-family:inherit; font-size:0.85rem; margin-top:0.4rem; }
+.settings-panel { display:none; }
+.settings-panel.open { display:block; }
+.key-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:8px; padding:0.6rem 0.9rem; color:var(--text); font-family:inherit;
+  font-size:0.85rem; margin-top:0.4rem; }
+.key-input:focus { outline:none; border-color:var(--gold); }
 .key-label { font-size:0.8rem; color:var(--muted); margin-top:0.8rem; display:block; }
+.settings-toggle { position:fixed; top:1rem; right:1rem; background:rgba(232,201,122,0.15);
+  border:1px solid var(--border); color:var(--gold); border-radius:8px; padding:0.4rem 0.8rem;
+  cursor:pointer; font-family:inherit; font-size:0.82rem; z-index:100; }
+.settings-toggle:hover { background:rgba(232,201,122,0.25); }
+.key-saved { color:var(--green); font-size:0.78rem; margin-top:0.4rem; display:none; }
 
-/* Export Overlay */
-#export-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; padding: 20px; }
-.export-box { width: 100%; max-width: 400px; }
-.export-progress-bg { height: 10px; background: #222; border-radius: 5px; margin: 20px 0; overflow: hidden; }
-.export-progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.1s; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>🎬 ဇာတ်လမ်း Video ဖန်တီးသူ</h1>
-  <p>အသံဖိုင်တင်ပါ — AI က အလိုအလျောက် ပုံရှာပြီး Video ဆောက်ပေးမည်</p>
+  <p>အသံဖိုင် upload လုပ်တာနဲ့ — AI က အသံနဲ့ ကိုက်ညီတဲ့ ပုံတွေ အလိုအလျောက် ရှာပေးမည်</p>
 </header>
+
 
 <button class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
 
@@ -118,21 +123,27 @@ audio { display: none; }
     <span class="key-label">Gemini API Key <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
     <input class="key-input" id="inp-gemini" type="password" placeholder="AIzaSy..." />
     <span class="key-label">Pexels API Key <a href="https://www.pexels.com/api/" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
-    <input class="key-input" id="inp-pexels" type="password" placeholder="optional" />
+    <input class="key-input" id="inp-pexels" type="password" placeholder="optional — မရှိရင် random ပုံ သုံးမည်" />
     <button class="btn btn-gold" onclick="saveKeys()" style="margin-top:1rem;">💾 သိမ်းမည်</button>
+    <div class="key-saved" id="key-saved">✅ သိမ်းပြီးပါပြီ!</div>
   </div>
 </div>
 
 <div class="wrap">
+
   <div class="card">
     <h2>🎵 အသံဖိုင် ရွေးပါ</h2>
+
     <button class="upload-btn" onclick="document.getElementById('audio-input').click()">
       <span class="upload-icon">🎙</span>
       MP3, WAV, M4A ဖိုင် ရွေးရန် နှိပ်ပါ
       <div class="file-name" id="file-name">ဖိုင် မရွေးရသေးပါ</div>
     </button>
     <input type="file" id="audio-input" accept="audio/*" style="display:none" onchange="onFileChange(this)">
-    <button class="btn btn-gold" id="process-btn" onclick="processAudio()" disabled>✨ AI နဲ့ ပုံရှာပြီး Video ပြင်ဆင်ရန်</button>
+
+    <button class="btn btn-gold" id="process-btn" onclick="processAudio()" disabled>
+      ✨ AI နဲ့ ပုံရှာပြီး Video ဆောက်ရန်
+    </button>
     <div class="status" id="status"></div>
   </div>
 
@@ -144,7 +155,7 @@ audio { display: none; }
   <div class="card" id="player-card" style="display:none">
     <h2>▶ Video Player</h2>
     <div id="player">
-      <img id="pl-img" src="" alt="" crossorigin="anonymous">
+      <img id="pl-img" src="" alt="">
       <div id="pl-overlay">
         <div id="pl-text"></div>
         <div class="pl-bar-wrap">
@@ -152,109 +163,164 @@ audio { display: none; }
           <span id="pl-count">0/0</span>
         </div>
         <div class="pl-btns">
-          <button class="pl-btn" onclick="prevSeg()">⏮</button>
+          <button class="pl-btn" onclick="prevSeg()">⏮ နောက်ဆုတ်</button>
           <button class="pl-btn" id="pause-btn" onclick="togglePause()">⏸ ရပ်</button>
-          <button class="pl-btn" onclick="nextSeg()">⏭</button>
-          <button class="pl-btn" id="rec-btn" onclick="startRecord()" style="background:#5ab87a; color:white; font-weight:bold;">⬇ Video သိမ်းမည်</button>
+          <button class="pl-btn" onclick="nextSeg()">⏭ ရှေ့တိုး</button>
+          <button class="pl-btn" id="rec-btn" onclick="startRecord()" style="background:rgba(232,201,122,0.25);color:#e8c97a;">⬇ မှတ်တမ်း</button>
         </div>
         <div id="rec-status" style="font-size:0.75rem;color:#e8c97a;margin-top:0.4rem;display:none;"></div>
       </div>
     </div>
   </div>
+
 </div>
 
-<!-- Export Loading Overlay -->
-<div id="export-overlay">
-  <div class="export-box">
-    <h2 style="color:var(--gold)">Video သိမ်းနေသည်...</h2>
-    <p style="color:var(--muted); font-size:0.85rem; margin-top:5px;">ကျေးဇူးပြု၍ ခဏစောင့်ပါ။ ၁၀၀% ပြည့်လျှင် အလိုအလျောက် သိမ်းပေးပါမည်။</p>
-    <div class="export-progress-bg"><div class="export-progress-fill" id="export-bar"></div></div>
-    <div id="export-pct" style="font-weight:bold; color:var(--gold);">0%</div>
-  </div>
-</div>
-
-<audio id="audio-el" crossorigin="anonymous"></audio>
+<audio id="audio-el"></audio>
 <canvas id="rec-canvas" style="display:none" width="1280" height="720"></canvas>
 
 <script>
+// ── API Keys from localStorage ─────────────────────────
+function getKeys() {
+  return {
+    gemini: localStorage.getItem('sv_gemini_key') || '',
+    pexels: localStorage.getItem('sv_pexels_key') || ''
+  };
+}
+
 let segments = [];
 let curIdx = 0;
 let paused = false;
 let audioFile = null;
 const audioEl = document.getElementById('audio-el');
 
-function getKeys() {
-  return { gemini: localStorage.getItem('sv_gemini_key') || '', pexels: localStorage.getItem('sv_pexels_key') || '' };
-}
-
 function onFileChange(input) {
-  if (input.files[0]) {
-    audioFile = input.files[0];
-    document.getElementById('file-name').textContent = '✅ ' + audioFile.name;
+  const f = input.files[0];
+  if (f) {
+    audioFile = f;
+    document.getElementById('file-name').textContent = '✅ ' + f.name;
     document.getElementById('process-btn').disabled = false;
   }
 }
 
 async function processAudio() {
+  if (!audioFile) return showStatus('အသံဖိုင် ရွေးပါ', 'error');
   const keys = getKeys();
-  if (!keys.gemini) return showStatus('❌ Settings မှာ Gemini API Key အရင်ထည့်ပါ။', 'error');
+  if (!keys.gemini) return showStatus('❌ Gemini API Key မရှိပါ။ ⚙️ Settings မှာ ထည့်ပါ။', 'error');
 
   const btn = document.getElementById('process-btn');
   btn.disabled = true;
+
   showStatus('<span class="spinner"></span> Gemini AI နဲ့ အသံကို စာပြောင်းနေသည်...', 'info');
 
+  let segs;
   try {
-    const base64 = await fileToBase64(audioFile);
-    const prompt = `Transcribe this audio. Return ONLY a valid JSON array. Each object must have: "text" (spoken words in Myanmar), "start" (number), "end" (number), "keyword" (3 English words). Split into 6s segments.`;
-    
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${keys.gemini}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: audioFile.type, data: base64 } }, { text: prompt }] }] })
-    });
-
-    const data = await res.json();
-    if (!data.candidates?.[0]) throw new Error("AI အဖြေမပေးပါ။ Key မှားနေခြင်း သို့မဟုတ် Audio ပြဿနာဖြစ်နိုင်သည်။");
-
-    const raw = data.candidates[0].content.parts[0].text;
-    segments = JSON.parse(raw.replace(/```json|```/g, '').trim());
-
-    renderSegments();
-
-    for (let i = 0; i < segments.length; i++) {
-      showStatus(`<span class="spinner"></span> ပုံများရှာနေသည် (${i+1}/${segments.length})...`, 'info');
-      segments[i].imageUrl = await fetchPexels(segments[i].keyword);
-      updateThumb(i);
-    }
-
-    showStatus('✅ ပြင်ဆင်မှုပြီးပါပြီ။', 'ok');
-    btn.disabled = false;
-    startPlayer();
-  } catch (e) {
-    showStatus('Error: ' + e.message, 'error');
-    btn.disabled = false;
+    segs = await transcribeWithGemini(audioFile);
+  } catch(e) {
+    showStatus('Gemini error: ' + e.message, 'error');
+    btn.disabled = false; return;
   }
+
+  if (!segs || segs.length === 0) {
+    showStatus('Transcript ထုတ်မရပါ။ Audio စစ်ဆေးပါ။', 'error');
+    btn.disabled = false; return;
+  }
+
+  segments = segs;
+  renderSegments();
+
+  for (let i = 0; i < segments.length; i++) {
+    showStatus(`<span class="spinner"></span> ပုံ ${i+1}/${segments.length} ရှာနေသည် — "${segments[i].keyword}"`, 'info');
+    segments[i].imageUrl = await fetchPexels(segments[i].keyword);
+    updateThumb(i);
+  }
+
+  showStatus('✅ ပြီးပါပြီ! Player မှာ Play နှိပ်ပါ', 'ok');
+  btn.disabled = false;
+  startPlayer();
 }
 
-async function fetchPexels(keyword) {
-  const keys = getKeys();
+async function transcribeWithGemini(file) {
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error('ဖိုင် အရွယ်အစား 20MB ထက် ကြီးနေသည်။ သေးငယ်သော ဖိုင် သုံးပါ။');
+  }
+  showStatus('<span class="spinner"></span> ဖိုင် ဖတ်နေသည်...', 'info');
+  const base64 = await fileToBase64(file);
+  const mimeType = file.type || 'audio/mpeg';
+
+  const prompt = `Transcribe this audio. The language may be Myanmar (Burmese).
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
+Each object must have:
+- "text": spoken words in original language
+- "start": start time in seconds (number)
+- "end": end time in seconds (number)
+- "keyword": 2-3 English words for image search describing the visual scene
+
+Split into 5-10 second segments. Example:
+[{"text":"သစ်ပင်ပေါ်မှာ သရဲတစ်ကောင်","start":0,"end":5,"keyword":"ghost on tree night"},{"text":"ကလေးငယ်ကြောက်သွားသည်","start":5,"end":10,"keyword":"scared child dark forest"}]`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${getKeys().gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [
+          { inline_data: { mime_type: mimeType, data: base64 } },
+          { text: prompt }
+        ]}],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 }
+      })
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'HTTP ' + res.status);
+  }
+
+  const data = await res.json();
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const clean = raw.replace(/```json|```/g, '').trim();
+
   try {
-    const r = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=landscape`, {
-      headers: keys.pexels ? { Authorization: keys.pexels } : {}
-    });
-    const d = await r.json();
-    return d.photos?.[0]?.src?.large || `https://picsum.photos/seed/${Math.random()}/1280/720`;
+    return JSON.parse(clean);
   } catch {
-    return `https://picsum.photos/seed/${keyword}/1280/720`;
+    const match = clean.match(/\[[\s\S]*\]/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error('JSON parse မရဘူး');
   }
 }
 
 function fileToBase64(file) {
-  return new Promise((res) => {
+  return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('File read failed'));
     r.readAsDataURL(file);
   });
+}
+
+async function fetchPexels(keyword) {
+  try {
+    const r = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=landscape`,
+      { headers: { Authorization: getKeys().pexels } }
+    );
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    return d.photos?.[0]?.src?.large || fallback(keyword);
+  } catch {
+    return fallback(keyword);
+  }
+}
+
+function fallback(k) {
+  return `https://picsum.photos/seed/${encodeURIComponent(k)}/1280/720`;
+}
+
+function fmt(s) {
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return `${m}:${String(sec).padStart(2,'0')}`;
 }
 
 function renderSegments() {
@@ -263,8 +329,11 @@ function renderSegments() {
   document.getElementById('seg-list').innerHTML = segments.map((s, i) => `
     <div class="seg-item" id="seg-${i}">
       <div class="seg-num">${i+1}</div>
-      <div class="seg-text">${s.text}<br><small style="color:var(--muted)">⏱ ${fmt(s.start)}–${fmt(s.end)}</small></div>
-      <img class="seg-thumb" id="thumb-${i}" src="https://via.placeholder.com/88x62?text=..." crossorigin="anonymous">
+      <div>
+        <div class="seg-text">${s.text}</div>
+        <div class="seg-time">⏱ ${fmt(s.start)}–${fmt(s.end)} | 🔍 ${s.keyword}</div>
+      </div>
+      <img class="seg-thumb" id="thumb-${i}" src="${fallback(s.keyword)}" alt="">
     </div>
   `).join('');
 }
@@ -274,32 +343,50 @@ function updateThumb(i) {
   if (el && segments[i].imageUrl) el.src = segments[i].imageUrl;
 }
 
-function fmt(s) {
-  const m = Math.floor(s/60), sec = Math.floor(s%60);
-  return `${m}:${String(sec).padStart(2,'0')}`;
-}
-
+// ── Player ─────────────────────────────────────────────
 function startPlayer() {
   document.getElementById('player-card').style.display = 'block';
   document.getElementById('player').style.display = 'block';
+  document.getElementById('player-card').scrollIntoView({ behavior: 'smooth' });
+
   audioEl.src = URL.createObjectURL(audioFile);
-  audioEl.ontimeupdate = () => {
-    const t = audioEl.currentTime;
-    let idx = segments.findIndex(s => t >= s.start && t < s.end);
-    if (idx === -1 && t >= segments[segments.length-1]?.end) idx = segments.length - 1;
-    if (idx !== -1 && idx !== curIdx) { curIdx = idx; renderFrame(idx); }
-    document.getElementById('pl-fill').style.width = (t / audioEl.duration * 100) + '%';
-    document.getElementById('pl-count').textContent = `${curIdx+1}/${segments.length}`;
-  };
+  curIdx = 0; paused = false;
+  audioEl.addEventListener('timeupdate', onTime);
+  audioEl.play();
   renderFrame(0);
 }
 
+function onTime() {
+  const t = audioEl.currentTime;
+  let idx = segments.findIndex((s, i) => {
+    const nx = segments[i+1];
+    return t >= s.start && (!nx || t < nx.start);
+  });
+  if (idx < 0) idx = segments.length - 1;
+  if (idx !== curIdx) { curIdx = idx; renderFrame(curIdx); }
+  const pct = audioEl.duration ? (t / audioEl.duration * 100) : 0;
+  document.getElementById('pl-fill').style.width = pct + '%';
+  document.getElementById('pl-count').textContent = `${curIdx+1}/${segments.length}`;
+}
+
 function renderFrame(i) {
+  if (i < 0 || i >= segments.length) return;
   const s = segments[i];
-  if (!s) return;
-  const img = document.getElementById('pl-img');
-  img.src = s.imageUrl;
+  document.getElementById('pl-img').src = s.imageUrl || fallback(s.keyword);
   document.getElementById('pl-text').textContent = s.text;
+  document.getElementById('pl-count').textContent = `${i+1}/${segments.length}`;
+}
+
+function prevSeg() {
+  curIdx = Math.max(0, curIdx-1);
+  audioEl.currentTime = segments[curIdx].start;
+  renderFrame(curIdx);
+}
+
+function nextSeg() {
+  curIdx = Math.min(segments.length-1, curIdx+1);
+  audioEl.currentTime = segments[curIdx].start;
+  renderFrame(curIdx);
 }
 
 function togglePause() {
@@ -308,106 +395,153 @@ function togglePause() {
   document.getElementById('pause-btn').textContent = paused ? '▶ ဆက်ကြည့်' : '⏸ ရပ်';
 }
 
-function prevSeg() { audioEl.currentTime = Math.max(0, audioEl.currentTime - 5); }
-function nextSeg() { audioEl.currentTime = Math.min(audioEl.duration, audioEl.currentTime + 5); }
 
-// ── Silent Export & Save ───────────────────────────────
+function toggleSettings() {
+  const w = document.getElementById('settings-wrap');
+  const showing = w.style.display !== 'none';
+  w.style.display = showing ? 'none' : 'block';
+  if (!showing) {
+    const k = getKeys();
+    if (k.gemini) document.getElementById('inp-gemini').value = k.gemini;
+    if (k.pexels) document.getElementById('inp-pexels').value = k.pexels;
+  }
+}
+
+function saveKeys() {
+  const g = document.getElementById('inp-gemini').value.trim();
+  const p = document.getElementById('inp-pexels').value.trim();
+  if (g) localStorage.setItem('sv_gemini_key', g);
+  if (p) localStorage.setItem('sv_pexels_key', p);
+  const saved = document.getElementById('key-saved');
+  saved.style.display = 'block';
+  setTimeout(() => { saved.style.display = 'none'; document.getElementById('settings-wrap').style.display = 'none'; }, 1500);
+}
+
+// Show settings if no key saved
+window.addEventListener('load', () => {
+  if (!getKeys().gemini) {
+    document.getElementById('settings-wrap').style.display = 'block';
+  }
+});
+
+
+// ── Video Recording ────────────────────────────────────
+let mediaRecorder = null;
+let recChunks = [];
+
 async function startRecord() {
+  const btn = document.getElementById('rec-btn');
+  const status = document.getElementById('rec-status');
+
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+
   if (segments.length === 0) return;
 
-  const overlay = document.getElementById('export-overlay');
-  const bar = document.getElementById('export-bar');
-  const pctText = document.getElementById('export-pct');
   const canvas = document.getElementById('rec-canvas');
   const ctx = canvas.getContext('2d');
 
-  overlay.style.display = 'flex';
-  audioEl.pause();
-  audioEl.currentTime = 0;
+  // Combine canvas stream + audio stream
+  const canvasStream = canvas.captureStream(30);
+  let combinedStream = canvasStream;
 
-  const stream = canvas.captureStream(30);
-  
-  // Audio capture
   try {
-    const audioCtx = new AudioContext();
-    const source = audioCtx.createMediaElementSource(audioEl);
-    const dest = audioCtx.createMediaStreamDestination();
-    source.connect(dest);
-    source.connect(audioCtx.destination);
-    stream.addTrack(dest.stream.getAudioTracks()[0]);
-  } catch(e) { console.error("Audio capture failed", e); }
+    const audioStream = audioEl.captureStream ? audioEl.captureStream() : audioEl.mozCaptureStream();
+    audioStream.getAudioTracks().forEach(t => combinedStream.addTrack(t));
+  } catch(e) {
+    console.log('Audio capture not supported, video only');
+  }
 
-  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
-  const recorder = new MediaRecorder(stream, { mimeType });
-  let chunks = [];
+  // Pick supported mime type
+  const mimeType = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
 
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.onstop = () => {
-    const blob = new Blob(chunks, { type: 'video/webm' });
+  recChunks = [];
+  mediaRecorder = new MediaRecorder(combinedStream, { mimeType });
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(recChunks, { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'story-video.webm';
     a.click();
-    overlay.style.display = 'none';
-    alert("Video သိမ်းဆည်းပြီးပါပြီ။");
+    URL.revokeObjectURL(url);
+    btn.textContent = '⬇ မှတ်တမ်း';
+    btn.style.background = 'rgba(232,201,122,0.25)';
+    status.style.display = 'none';
   };
 
-  recorder.start();
-  audioEl.play();
+  // Draw loop
+  let drawing = true;
+  async function drawFrame() {
+    if (!drawing) return;
+    const img = document.getElementById('pl-img');
+    const txt = document.getElementById('pl-text').textContent;
 
-  function draw() {
-    if (audioEl.ended) { recorder.stop(); return; }
-    
-    const t = audioEl.currentTime;
-    const s = segments.find(seg => t >= seg.start && t < seg.end) || segments[segments.length-1];
-
-    // Draw Image
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = s.imageUrl;
-    
-    if (img.complete) {
+    // Draw background image
+    if (img.complete && img.naturalWidth > 0) {
       ctx.drawImage(img, 0, 0, 1280, 720);
     } else {
-      ctx.fillStyle = "black"; ctx.fillRect(0,0,1280,720);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 1280, 720);
     }
 
-    // Text Overlay
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(0, 560, 1280, 160);
-    ctx.fillStyle = "white";
-    ctx.font = "bold 40px 'Noto Sans Myanmar', sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(s.text, 640, 650);
+    // Gradient overlay
+    const grad = ctx.createLinearGradient(0, 360, 0, 720);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1280, 720);
 
-    // Update Progress
-    const pct = (t / audioEl.duration) * 100;
-    bar.style.width = pct + '%';
-    pctText.textContent = Math.round(pct) + '%';
+    // Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 10;
+    // Word wrap
+    const words = txt.split('');
+    let line = '', lines = [];
+    for (let ch of words) {
+      const test = line + ch;
+      if (ctx.measureText(test).width > 1100) { lines.push(line); line = ch; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    const startY = 640 - (lines.length - 1) * 48;
+    lines.forEach((l, i) => ctx.fillText(l, 640, startY + i * 48));
+    ctx.shadowBlur = 0;
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(drawFrame);
   }
-  draw();
-}
 
-function toggleSettings() {
-  const w = document.getElementById('settings-wrap');
-  w.style.display = w.style.display === 'none' ? 'block' : 'none';
-}
+  mediaRecorder.start(100);
+  drawFrame();
+  btn.textContent = '⏹ ရပ်ပြီး Save';
+  btn.style.background = 'rgba(196,94,62,0.4)';
+  status.style.display = 'block';
+  status.textContent = '🔴 မှတ်တမ်းတင်နေသည်... ပြီးရင် ⏹ နှိပ်ပါ';
 
-function saveKeys() {
-  localStorage.setItem('sv_gemini_key', document.getElementById('inp-gemini').value.trim());
-  localStorage.setItem('sv_pexels_key', document.getElementById('inp-pexels').value.trim());
-  alert("Keys Saved!"); toggleSettings();
+  mediaRecorder.onstop = () => {
+    drawing = false;
+    const blob = new Blob(recChunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'story-video.webm'; a.click();
+    URL.revokeObjectURL(url);
+    btn.textContent = '⬇ မှတ်တမ်း';
+    btn.style.background = 'rgba(232,201,122,0.25)';
+    status.textContent = '✅ Download ဆွဲနေသည်...';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  };
 }
 
 function showStatus(msg, type) {
   const s = document.getElementById('status');
   s.style.display = 'block'; s.className = 'status '+type; s.innerHTML = msg;
 }
-
-window.onload = () => { if(!getKeys().gemini) toggleSettings(); };
 </script>
 </body>
 </html>
