@@ -106,6 +106,7 @@ audio { display: none; }
 .key-saved { color:var(--green); font-size:0.78rem; margin-top:0.4rem; display:none; }
 
 </style>
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
 
@@ -166,9 +167,9 @@ audio { display: none; }
           <button class="pl-btn" onclick="prevSeg()">⏮ နောက်ဆုတ်</button>
           <button class="pl-btn" id="pause-btn" onclick="togglePause()">⏸ ရပ်</button>
           <button class="pl-btn" onclick="nextSeg()">⏭ ရှေ့တိုး</button>
-          <button class="pl-btn" id="rec-btn" onclick="startRecord()" style="background:rgba(232,201,122,0.25);color:#e8c97a;">⬇ မှတ်တမ်း</button>
+          <button class="pl-btn" id="rec-btn" onclick="exportMp4()" style="background:rgba(232,201,122,0.25);color:#e8c97a;">⬇ MP4 ထုတ်မည်</button>
         </div>
-        <div id="rec-status" style="font-size:0.75rem;color:#e8c97a;margin-top:0.4rem;display:none;"></div>
+        <div id="rec-status" style="font-size:0.75rem;color:#e8c97a;margin-top:0.4rem;display:none;text-align:center;padding:0.3rem 0;"></div>
       </div>
     </div>
   </div>
@@ -425,117 +426,139 @@ window.addEventListener('load', () => {
 });
 
 
-// ── Video Recording ────────────────────────────────────
-let mediaRecorder = null;
-let recChunks = [];
 
-async function startRecord() {
+// ── MP4 Export (ffmpeg.wasm) ───────────────────────────
+const { createFFmpeg, fetchFile } = FFmpeg;
+const ffmpeg = createFFmpeg({ log: false });
+
+async function exportMp4() {
+  if (segments.length === 0) return;
   const btn = document.getElementById('rec-btn');
   const status = document.getElementById('rec-status');
-
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    return;
-  }
-
-  if (segments.length === 0) return;
-
-  const canvas = document.getElementById('rec-canvas');
-  const ctx = canvas.getContext('2d');
-
-  // Combine canvas stream + audio stream
-  const canvasStream = canvas.captureStream(30);
-  let combinedStream = canvasStream;
+  btn.disabled = true;
+  status.style.display = 'block';
 
   try {
-    const audioStream = audioEl.captureStream ? audioEl.captureStream() : audioEl.mozCaptureStream();
-    audioStream.getAudioTracks().forEach(t => combinedStream.addTrack(t));
-  } catch(e) {
-    console.log('Audio capture not supported, video only');
-  }
-
-  // Pick supported mime type
-  const mimeType = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-  recChunks = [];
-  mediaRecorder = new MediaRecorder(combinedStream, { mimeType });
-  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
-  mediaRecorder.onstop = () => {
-    const blob = new Blob(recChunks, { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'story-video.webm';
-    a.click();
-    URL.revokeObjectURL(url);
-    btn.textContent = '⬇ မှတ်တမ်း';
-    btn.style.background = 'rgba(232,201,122,0.25)';
-    status.style.display = 'none';
-  };
-
-  // Draw loop
-  let drawing = true;
-  async function drawFrame() {
-    if (!drawing) return;
-    const img = document.getElementById('pl-img');
-    const txt = document.getElementById('pl-text').textContent;
-
-    // Draw background image
-    if (img.complete && img.naturalWidth > 0) {
-      ctx.drawImage(img, 0, 0, 1280, 720);
-    } else {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, 1280, 720);
+    if (!ffmpeg.isLoaded()) {
+      status.textContent = '⏳ ffmpeg တင်နေသည် (တစ်ကြိမ်တည်း)...';
+      await ffmpeg.load();
     }
 
-    // Gradient overlay
-    const grad = ctx.createLinearGradient(0, 360, 0, 720);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1280, 720);
+    const canvas = document.getElementById('rec-canvas');
+    const ctx = canvas.getContext('2d');
+    const fps = 24;
+    let frameNum = 0;
 
-    // Text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 36px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 10;
-    // Word wrap
-    const words = txt.split('');
-    let line = '', lines = [];
-    for (let ch of words) {
-      const test = line + ch;
-      if (ctx.measureText(test).width > 1100) { lines.push(line); line = ch; }
-      else line = test;
+    status.textContent = '🎨 ပုံများ render လုပ်နေသည်...';
+
+    // Calculate total duration from segments
+    const totalDuration = segments[segments.length-1].end - segments[0].start;
+    const totalFrames = Math.ceil(totalDuration * fps);
+
+    for (let f = 0; f < totalFrames; f++) {
+      const t = segments[0].start + f / fps;
+
+      // Find current segment
+      let seg = segments[0];
+      for (let i = 0; i < segments.length; i++) {
+        if (t >= segments[i].start && (i === segments.length-1 || t < segments[i+1].start)) {
+          seg = segments[i]; break;
+        }
+      }
+
+      // Load image
+      await new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, 1280, 720);
+          // Gradient
+          const grad = ctx.createLinearGradient(0, 360, 0, 720);
+          grad.addColorStop(0, 'rgba(0,0,0,0)');
+          grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 1280, 720);
+          // Text
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 38px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.shadowColor = 'rgba(0,0,0,0.9)';
+          ctx.shadowBlur = 12;
+          const chars = seg.text.split('');
+          let line = '', lines = [];
+          for (let ch of chars) {
+            if (ctx.measureText(line+ch).width > 1100) { lines.push(line); line = ch; }
+            else line += ch;
+          }
+          if (line) lines.push(line);
+          const sy = 640 - (lines.length-1)*50;
+          lines.forEach((l,i) => ctx.fillText(l, 640, sy+i*50));
+          ctx.shadowBlur = 0;
+          resolve();
+        };
+        img.onerror = () => {
+          ctx.fillStyle = '#111'; ctx.fillRect(0,0,1280,720);
+          resolve();
+        };
+        img.src = seg.imageUrl || fallback(seg.keyword);
+      });
+
+      // Save frame as PNG to ffmpeg FS
+      const dataUrl = canvas.toDataURL('image/png');
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      ffmpeg.FS('writeFile', `frame${String(frameNum).padStart(5,'0')}.png`, bytes);
+      frameNum++;
+
+      if (f % fps === 0) {
+        const sec = Math.floor(f/fps);
+        status.textContent = `🎨 ${sec}s / ${Math.floor(totalDuration)}s render လုပ်နေသည်...`;
+      }
     }
-    if (line) lines.push(line);
-    const startY = 640 - (lines.length - 1) * 48;
-    lines.forEach((l, i) => ctx.fillText(l, 640, startY + i * 48));
-    ctx.shadowBlur = 0;
 
-    requestAnimationFrame(drawFrame);
-  }
+    status.textContent = '🎬 MP4 encode လုပ်နေသည်...';
 
-  mediaRecorder.start(100);
-  drawFrame();
-  btn.textContent = '⏹ ရပ်ပြီး Save';
-  btn.style.background = 'rgba(196,94,62,0.4)';
-  status.style.display = 'block';
-  status.textContent = '🔴 မှတ်တမ်းတင်နေသည်... ပြီးရင် ⏹ နှိပ်ပါ';
+    // Write audio to ffmpeg FS
+    const audioData = await fetchFile(URL.createObjectURL(audioFile));
+    ffmpeg.FS('writeFile', 'audio.mp3', audioData);
 
-  mediaRecorder.onstop = () => {
-    drawing = false;
-    const blob = new Blob(recChunks, { type: mimeType });
+    // Run ffmpeg
+    await ffmpeg.run(
+      '-framerate', String(fps),
+      '-i', 'frame%05d.png',
+      '-i', 'audio.mp3',
+      '-c:v', 'libx264',
+      '-c:a', 'aac',
+      '-pix_fmt', 'yuv420p',
+      '-shortest',
+      '-movflags', '+faststart',
+      'output.mp4'
+    );
+
+    // Read output and download
+    const data = ffmpeg.FS('readFile', 'output.mp4');
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'story-video.webm'; a.click();
+    a.href = url; a.download = 'story-video.mp4'; a.click();
     URL.revokeObjectURL(url);
-    btn.textContent = '⬇ မှတ်တမ်း';
-    btn.style.background = 'rgba(232,201,122,0.25)';
-    status.textContent = '✅ Download ဆွဲနေသည်...';
+
+    // Cleanup
+    for (let i = 0; i < frameNum; i++) {
+      try { ffmpeg.FS('unlink', `frame${String(i).padStart(5,'0')}.png`); } catch(e){}
+    }
+    try { ffmpeg.FS('unlink', 'audio.mp3'); ffmpeg.FS('unlink', 'output.mp4'); } catch(e){}
+
+    status.textContent = '✅ MP4 download ဆွဲနေသည်!';
     setTimeout(() => { status.style.display = 'none'; }, 3000);
-  };
+
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    console.error(e);
+  }
+  btn.disabled = false;
 }
 
 function showStatus(msg, type) {
