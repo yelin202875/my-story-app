@@ -256,7 +256,7 @@ Split into 5-10 second segments. Example:
 [{"text":"သစ်ပင်ပေါ်မှာ သရဲတစ်ကောင်","start":0,"end":5,"keyword":"ghost on tree night"},{"text":"ကလေးငယ်ကြောက်သွားသည်","start":5,"end":10,"keyword":"scared child dark forest"}]`;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${getKeys().gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${getKeys().gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
