@@ -92,6 +92,19 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle; margin-right: 5px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 audio { display: none; }
+.settings-panel { display:none; }
+.settings-panel.open { display:block; }
+.key-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:8px; padding:0.6rem 0.9rem; color:var(--text); font-family:inherit;
+  font-size:0.85rem; margin-top:0.4rem; }
+.key-input:focus { outline:none; border-color:var(--gold); }
+.key-label { font-size:0.8rem; color:var(--muted); margin-top:0.8rem; display:block; }
+.settings-toggle { position:fixed; top:1rem; right:1rem; background:rgba(232,201,122,0.15);
+  border:1px solid var(--border); color:var(--gold); border-radius:8px; padding:0.4rem 0.8rem;
+  cursor:pointer; font-family:inherit; font-size:0.82rem; z-index:100; }
+.settings-toggle:hover { background:rgba(232,201,122,0.25); }
+.key-saved { color:var(--green); font-size:0.78rem; margin-top:0.4rem; display:none; }
+
 </style>
 </head>
 <body>
@@ -100,6 +113,21 @@ audio { display: none; }
   <h1>🎬 ဇာတ်လမ်း Video ဖန်တီးသူ</h1>
   <p>အသံဖိုင် upload လုပ်တာနဲ့ — AI က အသံနဲ့ ကိုက်ညီတဲ့ ပုံတွေ အလိုအလျောက် ရှာပေးမည်</p>
 </header>
+
+
+<button class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
+
+<div class="wrap" id="settings-wrap" style="display:none">
+  <div class="card">
+    <h2>⚙️ API Keys သတ်မှတ်ရန်</h2>
+    <span class="key-label">Gemini API Key <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
+    <input class="key-input" id="inp-gemini" type="password" placeholder="AIzaSy..." />
+    <span class="key-label">Pexels API Key <a href="https://www.pexels.com/api/" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
+    <input class="key-input" id="inp-pexels" type="password" placeholder="optional — မရှိရင် random ပုံ သုံးမည်" />
+    <button class="btn btn-gold" onclick="saveKeys()" style="margin-top:1rem;">💾 သိမ်းမည်</button>
+    <div class="key-saved" id="key-saved">✅ သိမ်းပြီးပါပြီ!</div>
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -148,9 +176,13 @@ audio { display: none; }
 <audio id="audio-el"></audio>
 
 <script>
-// ── Hardcoded API Keys ──────────────────────────────────
-const GEMINI_KEY = 'AIzaSyBjWxnDf1CbbgqltmiKuHWpXfXCEh8AUm0';
-const PEXELS_KEY = 'GI1mJ5cXNkIgd5XO8b6oxBzkuWAq7vVr7pg7FXz3vdejv16RoIG1xwV9';
+// ── API Keys from localStorage ─────────────────────────
+function getKeys() {
+  return {
+    gemini: localStorage.getItem('sv_gemini_key') || '',
+    pexels: localStorage.getItem('sv_pexels_key') || ''
+  };
+}
 
 let segments = [];
 let curIdx = 0;
@@ -169,6 +201,8 @@ function onFileChange(input) {
 
 async function processAudio() {
   if (!audioFile) return showStatus('အသံဖိုင် ရွေးပါ', 'error');
+  const keys = getKeys();
+  if (!keys.gemini) return showStatus('❌ Gemini API Key မရှိပါ။ ⚙️ Settings မှာ ထည့်ပါ။', 'error');
 
   const btn = document.getElementById('process-btn');
   btn.disabled = true;
@@ -222,7 +256,7 @@ Split into 5-10 second segments. Example:
 [{"text":"သစ်ပင်ပေါ်မှာ သရဲတစ်ကောင်","start":0,"end":5,"keyword":"ghost on tree night"},{"text":"ကလေးငယ်ကြောက်သွားသည်","start":5,"end":10,"keyword":"scared child dark forest"}]`;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${getKeys().gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -267,7 +301,7 @@ async function fetchPexels(keyword) {
   try {
     const r = await fetch(
       `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=landscape`,
-      { headers: { Authorization: PEXELS_KEY } }
+      { headers: { Authorization: getKeys().pexels } }
     );
     if (!r.ok) throw new Error();
     const d = await r.json();
@@ -357,6 +391,35 @@ function togglePause() {
   paused ? audioEl.pause() : audioEl.play();
   document.getElementById('pause-btn').textContent = paused ? '▶ ဆက်ကြည့်' : '⏸ ရပ်';
 }
+
+
+function toggleSettings() {
+  const w = document.getElementById('settings-wrap');
+  const showing = w.style.display !== 'none';
+  w.style.display = showing ? 'none' : 'block';
+  if (!showing) {
+    const k = getKeys();
+    if (k.gemini) document.getElementById('inp-gemini').value = k.gemini;
+    if (k.pexels) document.getElementById('inp-pexels').value = k.pexels;
+  }
+}
+
+function saveKeys() {
+  const g = document.getElementById('inp-gemini').value.trim();
+  const p = document.getElementById('inp-pexels').value.trim();
+  if (g) localStorage.setItem('sv_gemini_key', g);
+  if (p) localStorage.setItem('sv_pexels_key', p);
+  const saved = document.getElementById('key-saved');
+  saved.style.display = 'block';
+  setTimeout(() => { saved.style.display = 'none'; document.getElementById('settings-wrap').style.display = 'none'; }, 1500);
+}
+
+// Show settings if no key saved
+window.addEventListener('load', () => {
+  if (!getKeys().gemini) {
+    document.getElementById('settings-wrap').style.display = 'block';
+  }
+});
 
 function showStatus(msg, type) {
   const s = document.getElementById('status');
