@@ -26,6 +26,7 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
 .card h2 { font-size: 0.95rem; color: var(--gold); margin-bottom: 1.1rem; }
 
+/* Upload button style */
 .upload-btn {
   display: block; width: 100%;
   background: rgba(232,201,122,0.08);
@@ -91,36 +92,22 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle; margin-right: 5px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 audio { display: none; }
-.settings-panel { display:none; }
-.settings-panel.open { display:block; }
-.key-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border);
-  border-radius:8px; padding:0.6rem 0.9rem; color:var(--text); font-family:inherit;
-  font-size:0.85rem; margin-top:0.4rem; }
-.key-input:focus { outline:none; border-color:var(--gold); }
+.settings-toggle { position:fixed; top:1rem; right:1rem; background:rgba(232,201,122,0.15); border:1px solid var(--border); color:var(--gold); border-radius:8px; padding:0.4rem 0.8rem; cursor:pointer; font-family:inherit; font-size:0.82rem; z-index:100; }
+.key-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:0.6rem 0.9rem; color:var(--text); font-family:inherit; font-size:0.85rem; margin-top:0.4rem; }
 .key-label { font-size:0.8rem; color:var(--muted); margin-top:0.8rem; display:block; }
-.settings-toggle { position:fixed; top:1rem; right:1rem; background:rgba(232,201,122,0.15);
-  border:1px solid var(--border); color:var(--gold); border-radius:8px; padding:0.4rem 0.8rem;
-  cursor:pointer; font-family:inherit; font-size:0.82rem; z-index:100; }
-.settings-toggle:hover { background:rgba(232,201,122,0.25); }
-.key-saved { color:var(--green); font-size:0.78rem; margin-top:0.4rem; display:none; }
 
-/* Export Progress Overlay */
-#export-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-  display: none; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 9999; padding: 2rem; text-align: center;
-}
-.progress-container { width: 100%; max-width: 400px; }
-.progress-bar-bg { height: 10px; background: #222; border-radius: 5px; margin: 20px 0; overflow: hidden; }
-.progress-bar-fill { height: 100%; background: var(--gold); width: 0%; }
-
+/* Export Overlay */
+#export-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; padding: 20px; }
+.export-box { width: 100%; max-width: 400px; }
+.export-progress-bg { height: 10px; background: #222; border-radius: 5px; margin: 20px 0; overflow: hidden; }
+.export-progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.1s; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>🎬 ဇာတ်လမ်း Video ဖန်တီးသူ</h1>
-  <p>အသံဖိုင်တင်ပါ - AI က အလိုအလျောက် Video ဆောက်ပေးမည်</p>
+  <p>အသံဖိုင်တင်ပါ — AI က အလိုအလျောက် ပုံရှာပြီး Video ဆောက်ပေးမည်</p>
 </header>
 
 <button class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
@@ -131,9 +118,8 @@ audio { display: none; }
     <span class="key-label">Gemini API Key <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
     <input class="key-input" id="inp-gemini" type="password" placeholder="AIzaSy..." />
     <span class="key-label">Pexels API Key <a href="https://www.pexels.com/api/" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
-    <input class="key-input" id="inp-pexels" type="password" placeholder="optional — မရှိရင် random ပုံ သုံးမည်" />
+    <input class="key-input" id="inp-pexels" type="password" placeholder="optional" />
     <button class="btn btn-gold" onclick="saveKeys()" style="margin-top:1rem;">💾 သိမ်းမည်</button>
-    <div class="key-saved" id="key-saved">✅ သိမ်းပြီးပါပြီ!</div>
   </div>
 </div>
 
@@ -156,7 +142,7 @@ audio { display: none; }
   </div>
 
   <div class="card" id="player-card" style="display:none">
-    <h2>▶ Video Player & Export</h2>
+    <h2>▶ Video Player</h2>
     <div id="player">
       <img id="pl-img" src="" alt="" crossorigin="anonymous">
       <div id="pl-overlay">
@@ -169,27 +155,26 @@ audio { display: none; }
           <button class="pl-btn" onclick="prevSeg()">⏮</button>
           <button class="pl-btn" id="pause-btn" onclick="togglePause()">⏸ ရပ်</button>
           <button class="pl-btn" onclick="nextSeg()">⏭</button>
-          <button class="pl-btn" onclick="exportVideoQuietly()" style="background:#5ab87a; color:white; font-weight:bold;">⬇ Video သိမ်းမည် (Direct)</button>
+          <button class="pl-btn" id="rec-btn" onclick="startRecord()" style="background:#5ab87a; color:white; font-weight:bold;">⬇ Video သိမ်းမည်</button>
         </div>
+        <div id="rec-status" style="font-size:0.75rem;color:#e8c97a;margin-top:0.4rem;display:none;"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Progress Overlay -->
+<!-- Export Loading Overlay -->
 <div id="export-overlay">
-    <div class="progress-container">
-        <h2 style="color:var(--gold); margin-bottom:10px;">Video သိမ်းနေသည်...</h2>
-        <p style="font-size:0.85rem; color:var(--muted);">ကျေးဇူးပြု၍ ခဏစောင့်ပါ။ ၁၀၀% ပြည့်လျှင် အလိုအလျောက် သိမ်းပေးပါမည်။</p>
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="export-bar"></div>
-        </div>
-        <div id="export-status" style="font-weight:bold;">0%</div>
-    </div>
+  <div class="export-box">
+    <h2 style="color:var(--gold)">Video သိမ်းနေသည်...</h2>
+    <p style="color:var(--muted); font-size:0.85rem; margin-top:5px;">ကျေးဇူးပြု၍ ခဏစောင့်ပါ။ ၁၀၀% ပြည့်လျှင် အလိုအလျောက် သိမ်းပေးပါမည်။</p>
+    <div class="export-progress-bg"><div class="export-progress-fill" id="export-bar"></div></div>
+    <div id="export-pct" style="font-weight:bold; color:var(--gold);">0%</div>
+  </div>
 </div>
 
 <audio id="audio-el" crossorigin="anonymous"></audio>
-<canvas id="rec-canvas" width="1280" height="720" style="display:none"></canvas>
+<canvas id="rec-canvas" style="display:none" width="1280" height="720"></canvas>
 
 <script>
 let segments = [];
@@ -199,24 +184,20 @@ let audioFile = null;
 const audioEl = document.getElementById('audio-el');
 
 function getKeys() {
-  return {
-    gemini: localStorage.getItem('sv_gemini_key') || '',
-    pexels: localStorage.getItem('sv_pexels_key') || ''
-  };
+  return { gemini: localStorage.getItem('sv_gemini_key') || '', pexels: localStorage.getItem('sv_pexels_key') || '' };
 }
 
 function onFileChange(input) {
-  const f = input.files[0];
-  if (f) {
-    audioFile = f;
-    document.getElementById('file-name').textContent = '✅ ' + f.name;
+  if (input.files[0]) {
+    audioFile = input.files[0];
+    document.getElementById('file-name').textContent = '✅ ' + audioFile.name;
     document.getElementById('process-btn').disabled = false;
   }
 }
 
 async function processAudio() {
   const keys = getKeys();
-  if (!keys.gemini) return showStatus('❌ Gemini API Key မရှိပါ။ Settings မှာ အရင်ထည့်ပါ။', 'error');
+  if (!keys.gemini) return showStatus('❌ Settings မှာ Gemini API Key အရင်ထည့်ပါ။', 'error');
 
   const btn = document.getElementById('process-btn');
   btn.disabled = true;
@@ -224,7 +205,7 @@ async function processAudio() {
 
   try {
     const base64 = await fileToBase64(audioFile);
-    const prompt = `Transcribe this audio. Return ONLY a valid JSON array. Each object: {"text":"spoken words in Myanmar","start":number,"end":number,"keyword":"2-3 English words for image search"}. Split into 6-second segments.`;
+    const prompt = `Transcribe this audio. Return ONLY a valid JSON array. Each object must have: "text" (spoken words in Myanmar), "start" (number), "end" (number), "keyword" (3 English words). Split into 6s segments.`;
     
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${keys.gemini}`, {
       method: 'POST',
@@ -233,19 +214,20 @@ async function processAudio() {
     });
 
     const data = await res.json();
+    if (!data.candidates?.[0]) throw new Error("AI အဖြေမပေးပါ။ Key မှားနေခြင်း သို့မဟုတ် Audio ပြဿနာဖြစ်နိုင်သည်။");
+
     const raw = data.candidates[0].content.parts[0].text;
-    const clean = raw.replace(/```json|```/g, '').trim();
-    segments = JSON.parse(clean);
+    segments = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
     renderSegments();
 
     for (let i = 0; i < segments.length; i++) {
-      showStatus(`<span class="spinner"></span> ပုံများ ရှာဖွေနေသည် (${i+1}/${segments.length})...`, 'info');
+      showStatus(`<span class="spinner"></span> ပုံများရှာနေသည် (${i+1}/${segments.length})...`, 'info');
       segments[i].imageUrl = await fetchPexels(segments[i].keyword);
       updateThumb(i);
     }
 
-    showStatus('✅ အားလုံး အဆင်သင့်ဖြစ်ပါပြီ!', 'ok');
+    showStatus('✅ ပြင်ဆင်မှုပြီးပါပြီ။', 'ok');
     btn.disabled = false;
     startPlayer();
   } catch (e) {
@@ -255,15 +237,15 @@ async function processAudio() {
 }
 
 async function fetchPexels(keyword) {
-  const key = getKeys().pexels;
+  const keys = getKeys();
   try {
     const r = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=landscape`, {
-      headers: key ? { Authorization: key } : {}
+      headers: keys.pexels ? { Authorization: keys.pexels } : {}
     });
     const d = await r.json();
-    return d.photos[0]?.src?.large || `https://picsum.photos/seed/${Math.random()}/1280/720`;
+    return d.photos?.[0]?.src?.large || `https://picsum.photos/seed/${Math.random()}/1280/720`;
   } catch {
-    return `https://picsum.photos/seed/${Math.random()}/1280/720`;
+    return `https://picsum.photos/seed/${keyword}/1280/720`;
   }
 }
 
@@ -281,11 +263,8 @@ function renderSegments() {
   document.getElementById('seg-list').innerHTML = segments.map((s, i) => `
     <div class="seg-item" id="seg-${i}">
       <div class="seg-num">${i+1}</div>
-      <div>
-        <div class="seg-text">${s.text}</div>
-        <div class="seg-time">⏱ ${fmt(s.start)}–${fmt(s.end)} | 🔍 ${s.keyword}</div>
-      </div>
-      <img class="seg-thumb" id="thumb-${i}" src="https://via.placeholder.com/88x62?text=..." alt="">
+      <div class="seg-text">${s.text}<br><small style="color:var(--muted)">⏱ ${fmt(s.start)}–${fmt(s.end)}</small></div>
+      <img class="seg-thumb" id="thumb-${i}" src="https://via.placeholder.com/88x62?text=..." crossorigin="anonymous">
     </div>
   `).join('');
 }
@@ -307,23 +286,20 @@ function startPlayer() {
   audioEl.ontimeupdate = () => {
     const t = audioEl.currentTime;
     let idx = segments.findIndex(s => t >= s.start && t < s.end);
-    if (idx === -1 && t >= segments[segments.length-1].end) idx = segments.length - 1;
-    if (idx !== -1 && idx !== curIdx) {
-      curIdx = idx;
-      renderFrame(idx);
-    }
-    const pct = (t / audioEl.duration) * 100;
-    document.getElementById('pl-fill').style.width = pct + '%';
+    if (idx === -1 && t >= segments[segments.length-1]?.end) idx = segments.length - 1;
+    if (idx !== -1 && idx !== curIdx) { curIdx = idx; renderFrame(idx); }
+    document.getElementById('pl-fill').style.width = (t / audioEl.duration * 100) + '%';
+    document.getElementById('pl-count').textContent = `${curIdx+1}/${segments.length}`;
   };
   renderFrame(0);
 }
 
 function renderFrame(i) {
   const s = segments[i];
+  if (!s) return;
   const img = document.getElementById('pl-img');
   img.src = s.imageUrl;
   document.getElementById('pl-text').textContent = s.text;
-  document.getElementById('pl-count').textContent = `${i+1}/${segments.length}`;
 }
 
 function togglePause() {
@@ -335,101 +311,103 @@ function togglePause() {
 function prevSeg() { audioEl.currentTime = Math.max(0, audioEl.currentTime - 5); }
 function nextSeg() { audioEl.currentTime = Math.min(audioEl.duration, audioEl.currentTime + 5); }
 
-// --- BACKGROUND EXPORT LOGIC ---
-async function exportVideoQuietly() {
-    const overlay = document.getElementById('export-overlay');
-    const bar = document.getElementById('export-bar');
-    const statusText = document.getElementById('export-status');
-    const canvas = document.getElementById('rec-canvas');
-    const ctx = canvas.getContext('2d');
+// ── Silent Export & Save ───────────────────────────────
+async function startRecord() {
+  if (segments.length === 0) return;
 
-    overlay.style.display = 'flex';
-    audioEl.pause();
-    audioEl.currentTime = 0;
-    audioEl.muted = false; // Video မှာ အသံပါဖို့ လိုအပ်သည်
+  const overlay = document.getElementById('export-overlay');
+  const bar = document.getElementById('export-bar');
+  const pctText = document.getElementById('export-pct');
+  const canvas = document.getElementById('rec-canvas');
+  const ctx = canvas.getContext('2d');
 
-    const stream = canvas.captureStream(30);
-    
-    // Audio Capture setup
+  overlay.style.display = 'flex';
+  audioEl.pause();
+  audioEl.currentTime = 0;
+
+  const stream = canvas.captureStream(30);
+  
+  // Audio capture
+  try {
     const audioCtx = new AudioContext();
     const source = audioCtx.createMediaElementSource(audioEl);
     const dest = audioCtx.createMediaStreamDestination();
     source.connect(dest);
     source.connect(audioCtx.destination);
     stream.addTrack(dest.stream.getAudioTracks()[0]);
+  } catch(e) { console.error("Audio capture failed", e); }
 
-    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
-    let chunks = [];
-    recorder.ondataavailable = e => chunks.push(e.data);
-    recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'story-video.webm';
-        a.click();
-        overlay.style.display = 'none';
-        alert('Video သိမ်းဆည်းပြီးပါပြီ!');
-    };
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  const recorder = new MediaRecorder(stream, { mimeType });
+  let chunks = [];
 
-    recorder.start();
-    audioEl.play();
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'story-video.webm';
+    a.click();
+    overlay.style.display = 'none';
+    alert("Video သိမ်းဆည်းပြီးပါပြီ။");
+  };
 
-    function draw() {
-        if (audioEl.ended || audioEl.paused && audioEl.currentTime >= audioEl.duration - 0.5) {
-            recorder.stop();
-            return;
-        }
+  recorder.start();
+  audioEl.play();
 
-        const t = audioEl.currentTime;
-        const s = segments.find(seg => t >= seg.start && t < seg.end) || segments[segments.length-1];
+  function draw() {
+    if (audioEl.ended) { recorder.stop(); return; }
+    
+    const t = audioEl.currentTime;
+    const s = segments.find(seg => t >= seg.start && t < seg.end) || segments[segments.length-1];
 
-        // Draw Image
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = s.imageUrl;
-        if (img.complete) {
-            ctx.drawImage(img, 0, 0, 1280, 720);
-        } else {
-            ctx.fillStyle = "black"; ctx.fillRect(0,0,1280,720);
-        }
-
-        // Subtitle Box
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.fillRect(0, 560, 1280, 160);
-
-        // Subtitle Text
-        ctx.fillStyle = "white";
-        ctx.font = "bold 40px 'Noto Sans Myanmar', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(s.text, 640, 650);
-
-        // Progress
-        const pct = (t / audioEl.duration) * 100;
-        bar.style.width = pct + '%';
-        statusText.textContent = Math.round(pct) + '%';
-
-        requestAnimationFrame(draw);
+    // Draw Image
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = s.imageUrl;
+    
+    if (img.complete) {
+      ctx.drawImage(img, 0, 0, 1280, 720);
+    } else {
+      ctx.fillStyle = "black"; ctx.fillRect(0,0,1280,720);
     }
-    draw();
+
+    // Text Overlay
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(0, 560, 1280, 160);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 40px 'Noto Sans Myanmar', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(s.text, 640, 650);
+
+    // Update Progress
+    const pct = (t / audioEl.duration) * 100;
+    bar.style.width = pct + '%';
+    pctText.textContent = Math.round(pct) + '%';
+
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
 
 function toggleSettings() {
-  const s = document.getElementById('settings-wrap');
-  s.style.display = s.style.display === 'none' ? 'block' : 'none';
+  const w = document.getElementById('settings-wrap');
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
 }
 
 function saveKeys() {
-  localStorage.setItem('sv_gemini_key', document.getElementById('inp-gemini').value);
-  localStorage.setItem('sv_pexels_key', document.getElementById('inp-pexels').value);
-  document.getElementById('key-saved').style.display = 'block';
-  setTimeout(() => { toggleSettings(); document.getElementById('key-saved').style.display = 'none'; }, 1000);
+  localStorage.setItem('sv_gemini_key', document.getElementById('inp-gemini').value.trim());
+  localStorage.setItem('sv_pexels_key', document.getElementById('inp-pexels').value.trim());
+  alert("Keys Saved!"); toggleSettings();
 }
 
 function showStatus(msg, type) {
   const s = document.getElementById('status');
   s.style.display = 'block'; s.className = 'status '+type; s.innerHTML = msg;
 }
+
+window.onload = () => { if(!getKeys().gemini) toggleSettings(); };
 </script>
 </body>
 </html>
