@@ -145,6 +145,10 @@ audio { display: none; }
     <button class="btn btn-gold" id="process-btn" onclick="processAudio()" disabled>
       ✨ AI နဲ့ ပုံရှာပြီး Video ဆောက်ရန်
     </button>
+    <button class="btn" id="dl-btn" onclick="exportMp4()" disabled style="background:rgba(90,184,122,0.15);border:1px solid rgba(90,184,122,0.4);color:#5ab87a;display:none;margin-top:0.6rem;">
+      ⬇ MP4 Download ဆွဲမည်
+    </button>
+    <div id="rec-status" style="font-size:0.82rem;color:#e8c97a;margin-top:0.6rem;display:none;text-align:center;padding:0.4rem;background:rgba(232,201,122,0.08);border-radius:8px;"></div>
     <div class="status" id="status"></div>
   </div>
 
@@ -167,9 +171,7 @@ audio { display: none; }
           <button class="pl-btn" onclick="prevSeg()">⏮ နောက်ဆုတ်</button>
           <button class="pl-btn" id="pause-btn" onclick="togglePause()">⏸ ရပ်</button>
           <button class="pl-btn" onclick="nextSeg()">⏭ ရှေ့တိုး</button>
-          <button class="pl-btn" id="rec-btn" onclick="exportMp4()" style="background:rgba(232,201,122,0.25);color:#e8c97a;">⬇ MP4 ထုတ်မည်</button>
         </div>
-        <div id="rec-status" style="font-size:0.75rem;color:#e8c97a;margin-top:0.4rem;display:none;text-align:center;padding:0.3rem 0;"></div>
       </div>
     </div>
   </div>
@@ -235,7 +237,10 @@ async function processAudio() {
     updateThumb(i);
   }
 
-  showStatus('✅ ပြီးပါပြီ! Player မှာ Play နှိပ်ပါ', 'ok');
+  showStatus('✅ ပြီးပါပြီ! Player မှာ ကြည့်နိုင်သည် / MP4 Download ဆွဲနိုင်သည်', 'ok');
+  const dlBtn = document.getElementById('dl-btn');
+  dlBtn.style.display = 'flex';
+  dlBtn.disabled = false;
   btn.disabled = false;
   startPlayer();
 }
