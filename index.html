@@ -9,7 +9,7 @@
 :root {
   --gold: #e8c97a; --deep: #080810; --panel: #0f0f1e;
   --border: rgba(232,201,122,0.18); --text: #e8e0d0;
-  --muted: #7a7590; --green: #5ab87a;
+  --muted: #7a7590; --green: #5ab87a; --red: #e07a5f;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -25,6 +25,63 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .wrap { max-width: 820px; margin: 0 auto; padding: 2rem 1.2rem; display: flex; flex-direction: column; gap: 1.4rem; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
 .card h2 { font-size: 0.95rem; color: var(--gold); margin-bottom: 1.1rem; }
+
+/* ── Onboarding Modal ── */
+#onboarding-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(8,8,16,0.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+#onboarding-box {
+  background: var(--panel); border: 1px solid var(--gold);
+  border-radius: 18px; padding: 2rem 2rem 1.8rem;
+  max-width: 480px; width: 100%;
+  box-shadow: 0 0 60px rgba(232,201,122,0.12);
+}
+#onboarding-box h2 { color: var(--gold); font-size: 1.2rem; margin-bottom: 0.5rem; }
+#onboarding-box p { color: var(--muted); font-size: 0.84rem; line-height: 1.6; margin-bottom: 1.2rem; }
+.ob-steps { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.4rem; }
+.ob-step {
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  background: rgba(255,255,255,0.03); border-radius: 10px; padding: 0.75rem;
+}
+.ob-num {
+  min-width: 26px; height: 26px; border-radius: 50%;
+  background: var(--gold); color: #08080e;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.78rem; margin-top: 1px;
+}
+.ob-step-text { font-size: 0.83rem; line-height: 1.55; }
+.ob-step-text a { color: var(--gold); }
+.ob-key-row { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+.ob-label { font-size: 0.78rem; color: var(--muted); }
+.ob-input-wrap { position: relative; }
+.ob-input {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 0.65rem 2.8rem 0.65rem 0.9rem;
+  color: var(--text); font-family: inherit; font-size: 0.85rem;
+}
+.ob-input:focus { outline: none; border-color: var(--gold); }
+.ob-input.valid { border-color: var(--green); }
+.ob-input.invalid { border-color: var(--red); }
+.ob-eye {
+  position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 1rem; line-height: 1;
+}
+.ob-hint { font-size: 0.75rem; margin-top: 0.25rem; display: none; }
+.ob-hint.ok { color: var(--green); display: block; }
+.ob-hint.err { color: var(--red); display: block; }
+.ob-test-btn {
+  background: rgba(232,201,122,0.1); border: 1px solid var(--border);
+  color: var(--gold); border-radius: 7px; padding: 0.4rem 0.9rem;
+  cursor: pointer; font-family: inherit; font-size: 0.8rem;
+  margin-top: 0.5rem; transition: all 0.2s;
+}
+.ob-test-btn:hover { background: rgba(232,201,122,0.2); }
+.ob-test-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Upload button style */
 .upload-btn {
@@ -54,6 +111,20 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .status.info { background: rgba(232,201,122,0.08); border: 1px solid rgba(232,201,122,0.25); color: var(--gold); }
 .status.error { background: rgba(196,94,62,0.1); border: 1px solid rgba(196,94,62,0.3); color: #e07a5f; }
 .status.ok { background: rgba(90,184,122,0.1); border: 1px solid rgba(90,184,122,0.3); color: var(--green); }
+
+/* API Key badge in header area */
+.api-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: rgba(90,184,122,0.1); border: 1px solid rgba(90,184,122,0.3);
+  color: var(--green); border-radius: 20px; padding: 0.25rem 0.75rem;
+  font-size: 0.75rem; margin-top: 0.6rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.api-badge:hover { background: rgba(90,184,122,0.18); }
+.api-badge.missing {
+  background: rgba(196,94,62,0.1); border-color: rgba(196,94,62,0.3);
+  color: var(--red);
+}
 
 .seg-list { display: flex; flex-direction: column; gap: 0.7rem; }
 .seg-item {
@@ -92,6 +163,8 @@ header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.88rem; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle; margin-right: 5px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 audio { display: none; }
+
+/* Settings panel */
 .settings-panel { display:none; }
 .settings-panel.open { display:block; }
 .key-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border);
@@ -105,6 +178,22 @@ audio { display: none; }
 .settings-toggle:hover { background:rgba(232,201,122,0.25); }
 .key-saved { color:var(--green); font-size:0.78rem; margin-top:0.4rem; display:none; }
 
+/* Model selector */
+.model-select {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 0.6rem 0.9rem; color: var(--text);
+  font-family: inherit; font-size: 0.85rem; margin-top: 0.4rem;
+  cursor: pointer;
+}
+.model-select:focus { outline: none; border-color: var(--gold); }
+.model-select option { background: #0f0f1e; }
+
+/* Progress bar */
+.progress-wrap { margin-top: 0.8rem; display: none; }
+.progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+.progress-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.35rem; text-align: center; }
 </style>
 </head>
 <body>
@@ -112,23 +201,92 @@ audio { display: none; }
 <header>
   <h1>🎬 ဇာတ်လမ်း Video ဖန်တီးသူ</h1>
   <p>အသံဖိုင် upload လုပ်တာနဲ့ — AI က အသံနဲ့ ကိုက်ညီတဲ့ ပုံတွေ အလိုအလျောက် ရှာပေးမည်</p>
+  <div id="api-status-badge" class="api-badge missing" onclick="openSettings()" style="display:inline-flex;">
+    ⚠ Gemini API Key မရှိပါ — ဒီမှာ ထည့်ပါ
+  </div>
 </header>
 
+<!-- ── Onboarding Modal ── -->
+<div id="onboarding-overlay">
+  <div id="onboarding-box">
+    <h2>🔑 Google AI Studio API Key ထည့်ပါ</h2>
+    <p>ဤ App ကို အသုံးပြုရန် Google AI Studio မှ <strong style="color:var(--gold)">Gemini API Key</strong> လိုအပ်သည်။ လုံးဝ အခမဲ့ ရနိုင်သည်။</p>
 
-<button class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
+    <div class="ob-steps">
+      <div class="ob-step">
+        <div class="ob-num">1</div>
+        <div class="ob-step-text">
+          <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> သို့ သွားပါ
+        </div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-num">2</div>
+        <div class="ob-step-text"><strong>"Create API key"</strong> ကို နှိပ်ပြီး Key ကို ကူးပါ</div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-num">3</div>
+        <div class="ob-step-text">အောက်မှ input box ထဲ ထည့်ပြီး <strong>"Test &amp; Save"</strong> နှိပ်ပါ</div>
+      </div>
+    </div>
 
+    <div class="ob-key-row">
+      <label class="ob-label">Gemini API Key <span style="color:var(--red)">*</span></label>
+      <div class="ob-input-wrap">
+        <input class="ob-input" id="ob-gemini-input" type="password"
+               placeholder="AIzaSy..." oninput="onGeminiKeyInput(this)" />
+        <button class="ob-eye" onclick="toggleObEye()" id="ob-eye-btn" title="ပြ/ဖျောက်">👁</button>
+      </div>
+      <div class="ob-hint" id="ob-gemini-hint"></div>
+      <button class="ob-test-btn" id="ob-test-btn" onclick="testAndSaveKey()" disabled>
+        🔍 Test &amp; Save
+      </button>
+    </div>
+
+    <div class="ob-key-row" style="margin-bottom:0">
+      <label class="ob-label">Pexels API Key <span style="color:var(--muted)">(ရွေးချယ်နိုင်)</span>
+        — <a href="https://www.pexels.com/api/" target="_blank" style="color:var(--gold);font-size:0.75rem;">ဒီမှာရယူပါ</a>
+      </label>
+      <div class="ob-input-wrap">
+        <input class="ob-input" id="ob-pexels-input" type="password"
+               placeholder="မရှိလျှင် random ပုံ သုံးမည်" />
+        <button class="ob-eye" onclick="toggleObPexelsEye()" title="ပြ/ဖျောက်">👁</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings Toggle ── -->
+<button class="settings-toggle" onclick="openSettings()">⚙️ Settings</button>
+
+<!-- ── Settings Panel ── -->
 <div class="wrap" id="settings-wrap" style="display:none">
   <div class="card">
-    <h2>⚙️ API Keys သတ်မှတ်ရန်</h2>
-    <span class="key-label">Gemini API Key <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
+    <h2>⚙️ API Keys &amp; Model သတ်မှတ်ရန်</h2>
+
+    <span class="key-label">Gemini API Key
+      <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a>
+    </span>
     <input class="key-input" id="inp-gemini" type="password" placeholder="AIzaSy..." />
-    <span class="key-label">Pexels API Key <a href="https://www.pexels.com/api/" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a></span>
+
+    <span class="key-label">Gemini Model ရွေးပါ</span>
+    <select class="model-select" id="inp-model">
+      <option value="gemini-2.0-flash">gemini-2.0-flash (မြန်ဆန်, အကြံပြု)</option>
+      <option value="gemini-1.5-flash">gemini-1.5-flash (ယုံကြည်စိတ်ချရ)</option>
+      <option value="gemini-1.5-pro">gemini-1.5-pro (အကောင်းဆုံး, နှေးနိုင်)</option>
+      <option value="gemini-2.5-flash-preview-04-17">gemini-2.5-flash-preview (နောက်ဆုံးထွက်)</option>
+    </select>
+
+    <span class="key-label">Pexels API Key
+      <a href="https://www.pexels.com/api/" target="_blank" style="color:var(--gold);font-size:0.75rem;">(ဒီမှာရယူပါ)</a>
+    </span>
     <input class="key-input" id="inp-pexels" type="password" placeholder="optional — မရှိရင် random ပုံ သုံးမည်" />
-    <button class="btn btn-gold" onclick="saveKeys()" style="margin-top:1rem;">💾 သိမ်းမည်</button>
+
+    <button class="btn btn-gold" onclick="saveSettingsKeys()" style="margin-top:1rem;">💾 သိမ်းမည်</button>
     <div class="key-saved" id="key-saved">✅ သိမ်းပြီးပါပြီ!</div>
   </div>
 </div>
 
+<!-- ── Main Content ── -->
 <div class="wrap">
 
   <div class="card">
@@ -144,10 +302,19 @@ audio { display: none; }
     <button class="btn btn-gold" id="process-btn" onclick="processAudio()" disabled>
       ✨ AI နဲ့ ပုံရှာပြီး Video ဆောက်ရန်
     </button>
-    <button class="btn" id="dl-btn" onclick="exportMp4()" disabled style="background:rgba(90,184,122,0.15);border:1px solid rgba(90,184,122,0.4);color:#5ab87a;display:none;margin-top:0.6rem;">
+    <button class="btn" id="dl-btn" onclick="exportMp4()" disabled
+      style="background:rgba(90,184,122,0.15);border:1px solid rgba(90,184,122,0.4);color:#5ab87a;display:none;margin-top:0.6rem;">
       ⬇ Video Download ဆွဲမည်
     </button>
+
     <div id="rec-status" style="font-size:0.82rem;color:#e8c97a;margin-top:0.6rem;display:none;text-align:center;padding:0.4rem;background:rgba(232,201,122,0.08);border-radius:8px;"></div>
+
+    <!-- Progress bar -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label"></div>
+    </div>
+
     <div class="status" id="status"></div>
   </div>
 
@@ -181,13 +348,24 @@ audio { display: none; }
 <canvas id="rec-canvas" style="display:none" width="1280" height="720"></canvas>
 
 <script>
-// ── API Keys from localStorage ─────────────────────────
-function getKeys() {
-  return {
-    gemini: localStorage.getItem('sv_gemini_key') || '',
-    pexels: localStorage.getItem('sv_pexels_key') || ''
-  };
-}
+// ═══════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════════════
+const STORAGE_KEYS = {
+  gemini: 'sv_gemini_key',
+  pexels: 'sv_pexels_key',
+  model:  'sv_gemini_model'
+};
+
+const DEFAULT_MODEL = 'gemini-2.0-flash';
+
+// Supported models with their audio capability info
+const MODELS = {
+  'gemini-2.0-flash':                  { audioInline: true,  maxBytes: 20*1024*1024 },
+  'gemini-1.5-flash':                  { audioInline: true,  maxBytes: 20*1024*1024 },
+  'gemini-1.5-pro':                    { audioInline: true,  maxBytes: 20*1024*1024 },
+  'gemini-2.5-flash-preview-04-17':    { audioInline: true,  maxBytes: 20*1024*1024 }
+};
 
 let segments = [];
 let curIdx = 0;
@@ -195,64 +373,251 @@ let paused = false;
 let audioFile = null;
 const audioEl = document.getElementById('audio-el');
 
-function onFileChange(input) {
-  const f = input.files[0];
-  if (f) {
-    audioFile = f;
-    document.getElementById('file-name').textContent = '✅ ' + f.name;
-    document.getElementById('process-btn').disabled = false;
+// ═══════════════════════════════════════════════
+//  KEY HELPERS
+// ═══════════════════════════════════════════════
+function getKeys() {
+  return {
+    gemini: localStorage.getItem(STORAGE_KEYS.gemini) || '',
+    pexels: localStorage.getItem(STORAGE_KEYS.pexels) || '',
+    model:  localStorage.getItem(STORAGE_KEYS.model)  || DEFAULT_MODEL
+  };
+}
+
+function saveKeys(gemini, pexels, model) {
+  if (gemini) localStorage.setItem(STORAGE_KEYS.gemini, gemini);
+  if (pexels)  localStorage.setItem(STORAGE_KEYS.pexels,  pexels);
+  localStorage.setItem(STORAGE_KEYS.model, model || DEFAULT_MODEL);
+}
+
+function updateApiBadge() {
+  const badge = document.getElementById('api-status-badge');
+  const k = getKeys();
+  if (k.gemini) {
+    badge.className = 'api-badge';
+    badge.textContent = '✅ Gemini API Key ရှိပြီ (' + k.model + ')';
+  } else {
+    badge.className = 'api-badge missing';
+    badge.textContent = '⚠ Gemini API Key မရှိပါ — ဒီမှာ ထည့်ပါ';
   }
 }
 
+// ═══════════════════════════════════════════════
+//  ONBOARDING MODAL
+// ═══════════════════════════════════════════════
+function onGeminiKeyInput(input) {
+  const val = input.value.trim();
+  const btn = document.getElementById('ob-test-btn');
+  const hint = document.getElementById('ob-gemini-hint');
+  input.className = 'ob-input';
+  hint.className = 'ob-hint';
+  hint.textContent = '';
+
+  if (val.length === 0) {
+    btn.disabled = true;
+    return;
+  }
+  if (!val.startsWith('AIza') || val.length < 30) {
+    input.className = 'ob-input invalid';
+    hint.className = 'ob-hint err';
+    hint.textContent = '⚠ Key ပုံစံ မမှန်ပါ (AIzaSy... ဖြင့် စသင့်သည်)';
+    btn.disabled = true;
+    return;
+  }
+  input.className = 'ob-input';
+  hint.className = 'ob-hint ok';
+  hint.textContent = '✓ ပုံစံ မှန်ပါသည် — Test & Save နှိပ်ပါ';
+  btn.disabled = false;
+}
+
+function toggleObEye() {
+  const inp = document.getElementById('ob-gemini-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function toggleObPexelsEye() {
+  const inp = document.getElementById('ob-pexels-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function testAndSaveKey() {
+  const geminiKey = document.getElementById('ob-gemini-input').value.trim();
+  const pexelsKey = document.getElementById('ob-pexels-input').value.trim();
+  const btn = document.getElementById('ob-test-btn');
+  const hint = document.getElementById('ob-gemini-hint');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Testing...';
+  hint.className = 'ob-hint ok';
+  hint.textContent = 'API ကို စစ်ဆေးနေသည်...';
+
+  try {
+    await testGeminiKey(geminiKey);
+    // Success
+    saveKeys(geminiKey, pexelsKey, DEFAULT_MODEL);
+    hint.textContent = '✅ API Key မှန်ကန်သည်! ဆက်လက်နိုင်သည်။';
+    btn.textContent = '✅ Saved!';
+    updateApiBadge();
+    setTimeout(() => {
+      document.getElementById('onboarding-overlay').style.display = 'none';
+    }, 1200);
+  } catch(e) {
+    hint.className = 'ob-hint err';
+    hint.textContent = '❌ ' + friendlyError(e.message);
+    btn.disabled = false;
+    btn.textContent = '🔍 Test & Save';
+  }
+}
+
+async function testGeminiKey(key) {
+  const model = DEFAULT_MODEL;
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Say "OK" only.' }] }],
+        generationConfig: { maxOutputTokens: 5 }
+      })
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'HTTP ' + res.status);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SETTINGS PANEL
+// ═══════════════════════════════════════════════
+function openSettings() {
+  const w = document.getElementById('settings-wrap');
+  const k = getKeys();
+  if (k.gemini) document.getElementById('inp-gemini').value = k.gemini;
+  if (k.pexels) document.getElementById('inp-pexels').value = k.pexels;
+
+  // Populate model dropdown
+  const sel = document.getElementById('inp-model');
+  sel.value = k.model || DEFAULT_MODEL;
+
+  w.style.display = 'block';
+  w.scrollIntoView({ behavior: 'smooth' });
+}
+
+function saveSettingsKeys() {
+  const g = document.getElementById('inp-gemini').value.trim();
+  const p = document.getElementById('inp-pexels').value.trim();
+  const m = document.getElementById('inp-model').value;
+  if (g) localStorage.setItem(STORAGE_KEYS.gemini, g);
+  if (p) localStorage.setItem(STORAGE_KEYS.pexels, p);
+  localStorage.setItem(STORAGE_KEYS.model, m);
+  updateApiBadge();
+  const saved = document.getElementById('key-saved');
+  saved.style.display = 'block';
+  setTimeout(() => {
+    saved.style.display = 'none';
+    document.getElementById('settings-wrap').style.display = 'none';
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════════
+//  FILE HANDLING
+// ═══════════════════════════════════════════════
+function onFileChange(input) {
+  const f = input.files[0];
+  if (!f) return;
+  audioFile = f;
+  document.getElementById('file-name').textContent = '✅ ' + f.name;
+
+  const keys = getKeys();
+  if (!keys.gemini) {
+    showStatus('❌ Gemini API Key မရှိပါ — ⚙️ Settings မှာ ထည့်ပါ', 'error');
+    document.getElementById('process-btn').disabled = true;
+    return;
+  }
+
+  const model = keys.model || DEFAULT_MODEL;
+  const maxBytes = MODELS[model]?.maxBytes || 20 * 1024 * 1024;
+  if (f.size > maxBytes) {
+    showStatus(`❌ ဖိုင် အရွယ်အစား ${(maxBytes/1024/1024).toFixed(0)}MB ထက် ကြီးနေသည်။ သေးငယ်သော ဖိုင် သုံးပါ။`, 'error');
+    document.getElementById('process-btn').disabled = true;
+    return;
+  }
+
+  document.getElementById('process-btn').disabled = false;
+  hideStatus();
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN PROCESS
+// ═══════════════════════════════════════════════
 async function processAudio() {
   if (!audioFile) return showStatus('အသံဖိုင် ရွေးပါ', 'error');
   const keys = getKeys();
-  if (!keys.gemini) return showStatus('❌ Gemini API Key မရှိပါ။ ⚙️ Settings မှာ ထည့်ပါ။', 'error');
+  if (!keys.gemini) {
+    showStatus('❌ Gemini API Key မရှိပါ။ ⚙️ Settings မှာ ထည့်ပါ။', 'error');
+    openSettings();
+    return;
+  }
 
   const btn = document.getElementById('process-btn');
   btn.disabled = true;
+  document.getElementById('dl-btn').style.display = 'none';
+  setProgress(0, '');
 
   showStatus('<span class="spinner"></span> Gemini AI နဲ့ အသံကို စာပြောင်းနေသည်...', 'info');
 
   let segs;
   try {
-    segs = await transcribeWithGemini(audioFile);
+    segs = await transcribeWithGemini(audioFile, keys);
   } catch(e) {
-    showStatus('Gemini error: ' + e.message, 'error');
-    btn.disabled = false; return;
+    showStatus('❌ Gemini error: ' + friendlyError(e.message), 'error');
+    btn.disabled = false;
+    hideProgress();
+    return;
   }
 
   if (!segs || segs.length === 0) {
-    showStatus('Transcript ထုတ်မရပါ။ Audio စစ်ဆေးပါ။', 'error');
-    btn.disabled = false; return;
+    showStatus('❌ Transcript ထုတ်မရပါ။ Audio စစ်ဆေးပါ သို့မဟုတ် တခြား Model သုံးကြည့်ပါ။', 'error');
+    btn.disabled = false;
+    hideProgress();
+    return;
   }
 
   segments = segs;
   renderSegments();
+  setProgress(20, `✅ ${segs.length} segments ထုတ်ပြီး — ပုံများ ရှာနေသည်...`);
 
   for (let i = 0; i < segments.length; i++) {
-    showStatus(`<span class="spinner"></span> ပုံ ${i+1}/${segments.length} ရှာနေသည် — "${segments[i].keyword}"`, 'info');
-    segments[i].imageUrl = await fetchPexels(segments[i].keyword);
+    const pct = 20 + Math.round((i / segments.length) * 75);
+    setProgress(pct, `🖼 ပုံ ${i+1}/${segments.length} ရှာနေသည် — "${segments[i].keyword}"`);
+    segments[i].imageUrl = await fetchImage(segments[i].keyword, keys.pexels);
     updateThumb(i);
   }
 
+  setProgress(100, '✅ ပြီးပါပြီ!');
   showStatus('✅ ပြီးပါပြီ! Player မှာ ကြည့်နိုင်သည် / MP4 Download ဆွဲနိုင်သည်', 'ok');
+
   const dlBtn = document.getElementById('dl-btn');
   dlBtn.style.display = 'flex';
   dlBtn.disabled = false;
   btn.disabled = false;
   startPlayer();
+  setTimeout(hideProgress, 2000);
 }
 
-async function transcribeWithGemini(file) {
-  if (file.size > 20 * 1024 * 1024) {
-    throw new Error('ဖိုင် အရွယ်အစား 20MB ထက် ကြီးနေသည်။ သေးငယ်သော ဖိုင် သုံးပါ။');
-  }
+// ═══════════════════════════════════════════════
+//  GEMINI TRANSCRIPTION (Google AI Studio API)
+// ═══════════════════════════════════════════════
+async function transcribeWithGemini(file, keys) {
+  const model = keys.model || DEFAULT_MODEL;
   showStatus('<span class="spinner"></span> ဖိုင် ဖတ်နေသည်...', 'info');
+
   const base64 = await fileToBase64(file);
   const mimeType = file.type || 'audio/mpeg';
 
-  const prompt = `Transcribe this audio. The language may be Myanmar (Burmese).
+  const prompt = `Transcribe this audio. The language may be Myanmar (Burmese) or English.
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
 Each object must have:
 - "text": spoken words in original language
@@ -263,39 +628,86 @@ Each object must have:
 Split into 5-10 second segments. Example:
 [{"text":"သစ်ပင်ပေါ်မှာ သရဲတစ်ကောင်","start":0,"end":5,"keyword":"ghost on tree night"},{"text":"ကလေးငယ်ကြောက်သွားသည်","start":5,"end":10,"keyword":"scared child dark forest"}]`;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${getKeys().gemini}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [
+  showStatus(`<span class="spinner"></span> ${model} နဲ့ transcribe လုပ်နေသည်...`, 'info');
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keys.gemini}`;
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
           { inline_data: { mime_type: mimeType, data: base64 } },
           { text: prompt }
-        ]}],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 }
-      })
-    }
-  );
+        ]
+      }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+    })
+  });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || 'HTTP ' + res.status);
+    const errBody = await res.json().catch(() => ({}));
+    const msg = errBody.error?.message || 'HTTP ' + res.status;
+    // Provide specific guidance for common errors
+    if (res.status === 400 && msg.includes('API_KEY')) throw new Error('API Key မမှန်ပါ — Settings မှာ ပြင်ပါ');
+    if (res.status === 403) throw new Error('API Key ကို access ခွင့် မရှိပါ (403) — Key ကို စစ်ဆေးပါ');
+    if (res.status === 429) throw new Error('Rate limit ကျော်သွားသည် (429) — ခဏစောင့်ပြီး ထပ်ကြိုးစားပါ');
+    if (res.status === 404) throw new Error(`Model "${model}" မတွေ့ပါ — Settings မှာ Model ပြောင်းပါ`);
+    throw new Error(msg);
   }
 
   const data = await res.json();
+
+  // Check for safety blocks
+  if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+    throw new Error('Safety filter ကြောင့် ဆောင်ရွက်မရပါ');
+  }
+  if (data.candidates?.[0]?.finishReason === 'RECITATION') {
+    throw new Error('Recitation filter ကြောင့် ဆောင်ရွက်မရပါ');
+  }
+
   const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const clean = raw.replace(/```json|```/g, '').trim();
+  if (!raw) throw new Error('AI မှ response မရပါ — ထပ်ကြိုးစားပါ');
+
+  const clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
   try {
     return JSON.parse(clean);
   } catch {
     const match = clean.match(/\[[\s\S]*\]/);
     if (match) return JSON.parse(match[0]);
-    throw new Error('JSON parse မရဘူး');
+    throw new Error('JSON parse မရဘူး — AI response ပုံစံ မမှန်ပါ');
   }
 }
 
+// ═══════════════════════════════════════════════
+//  IMAGE FETCHING
+// ═══════════════════════════════════════════════
+async function fetchImage(keyword, pexelsKey) {
+  if (pexelsKey) {
+    try {
+      const r = await fetch(
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=landscape`,
+        { headers: { Authorization: pexelsKey } }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        const url = d.photos?.[0]?.src?.large;
+        if (url) return url;
+      }
+    } catch {}
+  }
+  return fallback(keyword);
+}
+
+function fallback(k) {
+  return `https://picsum.photos/seed/${encodeURIComponent(k)}/1280/720`;
+}
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
 function fileToBase64(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
@@ -305,35 +717,55 @@ function fileToBase64(file) {
   });
 }
 
-async function fetchPexels(keyword) {
-  try {
-    const r = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=landscape`,
-      { headers: { Authorization: getKeys().pexels } }
-    );
-    if (!r.ok) throw new Error();
-    const d = await r.json();
-    return d.photos?.[0]?.src?.large || fallback(keyword);
-  } catch {
-    return fallback(keyword);
-  }
-}
-
-function fallback(k) {
-  return `https://picsum.photos/seed/${encodeURIComponent(k)}/1280/720`;
-}
-
 function fmt(s) {
-  const m = Math.floor(s/60), sec = Math.floor(s%60);
-  return `${m}:${String(sec).padStart(2,'0')}`;
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
+function friendlyError(msg) {
+  if (!msg) return 'အမည်မသိ error';
+  if (msg.includes('API_KEY_INVALID') || msg.includes('API key not valid'))
+    return 'API Key မမှန်ပါ — Settings မှာ ပြင်ပါ';
+  if (msg.includes('PERMISSION_DENIED'))
+    return 'Permission ငြင်းပယ်ခံရသည် — Key ကို စစ်ဆေးပါ';
+  if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED'))
+    return 'Quota ကုန်သွားသည် — နောက်ရက် ထပ်ကြိုးစားပါ';
+  if (msg.includes('UNAVAILABLE') || msg.includes('503'))
+    return 'Server ယာယီ မရနိုင်ပါ — ခဏစောင့်ပြီး ထပ်ကြိုးစားပါ';
+  return msg;
+}
+
+function showStatus(msg, type) {
+  const s = document.getElementById('status');
+  s.style.display = 'block';
+  s.className = 'status ' + type;
+  s.innerHTML = msg;
+}
+
+function hideStatus() {
+  document.getElementById('status').style.display = 'none';
+}
+
+function setProgress(pct, label) {
+  const wrap = document.getElementById('progress-wrap');
+  wrap.style.display = 'block';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+function hideProgress() {
+  document.getElementById('progress-wrap').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+//  SEGMENTS & PLAYER
+// ═══════════════════════════════════════════════
 function renderSegments() {
   document.getElementById('seg-card').style.display = 'block';
   document.getElementById('seg-count').textContent = segments.length + ' segments';
   document.getElementById('seg-list').innerHTML = segments.map((s, i) => `
     <div class="seg-item" id="seg-${i}">
-      <div class="seg-num">${i+1}</div>
+      <div class="seg-num">${i + 1}</div>
       <div>
         <div class="seg-text">${s.text}</div>
         <div class="seg-time">⏱ ${fmt(s.start)}–${fmt(s.end)} | 🔍 ${s.keyword}</div>
@@ -344,18 +776,17 @@ function renderSegments() {
 }
 
 function updateThumb(i) {
-  const el = document.getElementById('thumb-'+i);
+  const el = document.getElementById('thumb-' + i);
   if (el && segments[i].imageUrl) el.src = segments[i].imageUrl;
 }
 
-// ── Player ─────────────────────────────────────────────
 function startPlayer() {
   document.getElementById('player-card').style.display = 'block';
   document.getElementById('player').style.display = 'block';
   document.getElementById('player-card').scrollIntoView({ behavior: 'smooth' });
-
   audioEl.src = URL.createObjectURL(audioFile);
   curIdx = 0; paused = false;
+  audioEl.removeEventListener('timeupdate', onTime);
   audioEl.addEventListener('timeupdate', onTime);
   audioEl.play();
   renderFrame(0);
@@ -364,14 +795,14 @@ function startPlayer() {
 function onTime() {
   const t = audioEl.currentTime;
   let idx = segments.findIndex((s, i) => {
-    const nx = segments[i+1];
+    const nx = segments[i + 1];
     return t >= s.start && (!nx || t < nx.start);
   });
   if (idx < 0) idx = segments.length - 1;
   if (idx !== curIdx) { curIdx = idx; renderFrame(curIdx); }
   const pct = audioEl.duration ? (t / audioEl.duration * 100) : 0;
   document.getElementById('pl-fill').style.width = pct + '%';
-  document.getElementById('pl-count').textContent = `${curIdx+1}/${segments.length}`;
+  document.getElementById('pl-count').textContent = `${curIdx + 1}/${segments.length}`;
 }
 
 function renderFrame(i) {
@@ -379,17 +810,17 @@ function renderFrame(i) {
   const s = segments[i];
   document.getElementById('pl-img').src = s.imageUrl || fallback(s.keyword);
   document.getElementById('pl-text').textContent = s.text;
-  document.getElementById('pl-count').textContent = `${i+1}/${segments.length}`;
+  document.getElementById('pl-count').textContent = `${i + 1}/${segments.length}`;
 }
 
 function prevSeg() {
-  curIdx = Math.max(0, curIdx-1);
+  curIdx = Math.max(0, curIdx - 1);
   audioEl.currentTime = segments[curIdx].start;
   renderFrame(curIdx);
 }
 
 function nextSeg() {
-  curIdx = Math.min(segments.length-1, curIdx+1);
+  curIdx = Math.min(segments.length - 1, curIdx + 1);
   audioEl.currentTime = segments[curIdx].start;
   renderFrame(curIdx);
 }
@@ -400,38 +831,9 @@ function togglePause() {
   document.getElementById('pause-btn').textContent = paused ? '▶ ဆက်ကြည့်' : '⏸ ရပ်';
 }
 
-
-function toggleSettings() {
-  const w = document.getElementById('settings-wrap');
-  const showing = w.style.display !== 'none';
-  w.style.display = showing ? 'none' : 'block';
-  if (!showing) {
-    const k = getKeys();
-    if (k.gemini) document.getElementById('inp-gemini').value = k.gemini;
-    if (k.pexels) document.getElementById('inp-pexels').value = k.pexels;
-  }
-}
-
-function saveKeys() {
-  const g = document.getElementById('inp-gemini').value.trim();
-  const p = document.getElementById('inp-pexels').value.trim();
-  if (g) localStorage.setItem('sv_gemini_key', g);
-  if (p) localStorage.setItem('sv_pexels_key', p);
-  const saved = document.getElementById('key-saved');
-  saved.style.display = 'block';
-  setTimeout(() => { saved.style.display = 'none'; document.getElementById('settings-wrap').style.display = 'none'; }, 1500);
-}
-
-// Show settings if no key saved
-window.addEventListener('load', () => {
-  if (!getKeys().gemini) {
-    document.getElementById('settings-wrap').style.display = 'block';
-  }
-});
-
-
-
-// ── Video Download (WebM via MediaRecorder) ────────────
+// ═══════════════════════════════════════════════
+//  VIDEO EXPORT (WebM via MediaRecorder)
+// ═══════════════════════════════════════════════
 async function exportMp4() {
   if (segments.length === 0) return;
   const btn = document.getElementById('dl-btn');
@@ -443,10 +845,9 @@ async function exportMp4() {
   const canvas = document.getElementById('rec-canvas');
   const ctx = canvas.getContext('2d');
   const fps = 24;
-  const totalDuration = segments[segments.length-1].end - segments[0].start;
+  const totalDuration = segments[segments.length - 1].end - segments[0].start;
   const totalFrames = Math.ceil(totalDuration * fps);
 
-  // Preload all images first
   status.textContent = '🖼 ပုံများ တင်နေသည်...';
   const imgs = await Promise.all(segments.map(seg => new Promise(resolve => {
     const img = new Image();
@@ -456,7 +857,6 @@ async function exportMp4() {
     img.src = seg.imageUrl || fallback(seg.keyword);
   })));
 
-  // Setup MediaRecorder
   const canvasStream = canvas.captureStream(fps);
   let stream = canvasStream;
   try {
@@ -464,12 +864,12 @@ async function exportMp4() {
     aStream.getAudioTracks().forEach(t => stream.addTrack(t));
   } catch(e) {}
 
-  const mimeType = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+  const mimeType = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
     .find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
 
   const chunks = [];
   const recorder = new MediaRecorder(stream, { mimeType });
-  recorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
 
   recorder.onstop = () => {
     const blob = new Blob(chunks, { type: mimeType });
@@ -479,13 +879,10 @@ async function exportMp4() {
     URL.revokeObjectURL(url);
     status.textContent = '✅ Download ဆွဲပြီးပါပြီ! (.webm ဖိုင်)';
     btn.disabled = false;
-    setTimeout(()=>{ status.style.display='none'; }, 4000);
+    setTimeout(() => { status.style.display = 'none'; }, 4000);
   };
 
-  // Render frames off-screen
   status.textContent = '🎬 Video render လုပ်နေသည်... ခဏစောင့်ပါ';
-
-  // Reset audio to start
   audioEl.currentTime = segments[0].start;
   recorder.start(100);
 
@@ -496,47 +893,58 @@ async function exportMp4() {
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = 12;
     const chars = txt.split('');
-    let line='', lines=[];
-    for(let ch of chars){
-      if(ctx.measureText(line+ch).width>1100){lines.push(line);line=ch;}else line+=ch;
+    let line = '', lines = [];
+    for (let ch of chars) {
+      if (ctx.measureText(line + ch).width > 1100) { lines.push(line); line = ch; } else line += ch;
     }
-    if(line) lines.push(line);
-    const sy = 640-(lines.length-1)*50;
-    lines.forEach((l,i)=>ctx.fillText(l,640,sy+i*50));
-    ctx.shadowBlur=0;
+    if (line) lines.push(line);
+    const sy = 640 - (lines.length - 1) * 50;
+    lines.forEach((l, i) => ctx.fillText(l, 640, sy + i * 50));
+    ctx.shadowBlur = 0;
   }
 
   let frame = 0;
   function renderNext() {
-    if(frame >= totalFrames){ recorder.stop(); return; }
-    const t = segments[0].start + frame/fps;
+    if (frame >= totalFrames) { recorder.stop(); return; }
+    const t = segments[0].start + frame / fps;
     let si = 0;
-    for(let i=0;i<segments.length;i++){
-      if(t>=segments[i].start&&(i===segments.length-1||t<segments[i+1].start)){si=i;break;}
+    for (let i = 0; i < segments.length; i++) {
+      if (t >= segments[i].start && (i === segments.length - 1 || t < segments[i + 1].start)) { si = i; break; }
     }
     const seg = segments[si];
     const img = imgs[si];
-    if(img){ ctx.drawImage(img,0,0,1280,720); }
-    else{ ctx.fillStyle='#111'; ctx.fillRect(0,0,1280,720); }
-    const grad=ctx.createLinearGradient(0,360,0,720);
-    grad.addColorStop(0,'rgba(0,0,0,0)');
-    grad.addColorStop(1,'rgba(0,0,0,0.85)');
-    ctx.fillStyle=grad; ctx.fillRect(0,0,1280,720);
+    if (img) { ctx.drawImage(img, 0, 0, 1280, 720); }
+    else { ctx.fillStyle = '#111'; ctx.fillRect(0, 0, 1280, 720); }
+    const grad = ctx.createLinearGradient(0, 360, 0, 720);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, 1280, 720);
     drawText(seg.text);
     frame++;
-    if(frame % (fps*2)===0){
-      const sec=Math.floor(frame/fps);
-      status.textContent=`🎬 ${sec}s / ${Math.floor(totalDuration)}s render လုပ်နေသည်...`;
+    if (frame % (fps * 2) === 0) {
+      const sec = Math.floor(frame / fps);
+      status.textContent = `🎬 ${sec}s / ${Math.floor(totalDuration)}s render လုပ်နေသည်...`;
     }
-    setTimeout(renderNext, 1000/fps);
+    setTimeout(renderNext, 1000 / fps);
   }
   renderNext();
 }
 
-function showStatus(msg, type) {
-  const s = document.getElementById('status');
-  s.style.display = 'block'; s.className = 'status '+type; s.innerHTML = msg;
-}
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  const k = getKeys();
+  updateApiBadge();
+
+  if (k.gemini) {
+    // Key already saved — skip onboarding
+    document.getElementById('onboarding-overlay').style.display = 'none';
+  } else {
+    // Show onboarding modal
+    document.getElementById('onboarding-overlay').style.display = 'flex';
+  }
+});
 </script>
 </body>
 </html>
